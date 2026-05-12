@@ -7,13 +7,16 @@ import streamlit as st
 from langchain_core.runnables import RunnablePassthrough
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFLoader
-from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 load_dotenv()
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+# os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
+
+google_key = os.getenv("GOOGLE_API_KEY")
+groq_key = os.getenv("GROQ_API_KEY")
 
 
 @st.cache_resource
@@ -28,7 +31,9 @@ def get_chain():
     # print(chunks[:20])
 
     # embeddings
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/embedding-001", google_api_key=google_key
+    )
 
     # vector db
     db = Chroma.from_documents(chunks, embeddings)
@@ -41,7 +46,7 @@ def get_chain():
         Question : {Question}
         """)
 
-    llm = ChatGroq(model="llama-3.3-70b-versatile")
+    llm = ChatGroq(model="llama-3.3-70b-versatile", groq_api_key=groq_key)
 
     # retriever
     retriever = db.as_retriever()
